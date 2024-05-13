@@ -1,9 +1,13 @@
 from __future__ import annotations
 
 import ast
+import os
+from pathlib import Path
+
 import pytest
 
 from databricks.labs.ucx.source_code.python_linter import ASTLinter, PythonLinter
+from tests.unit import locate_site_packages
 
 
 def test_linter_returns_empty_list_of_dbutils_notebook_run_calls():
@@ -227,3 +231,36 @@ def test_is_none(migration_index, param):
     val = get_statement_node(param["stmt"]).value
     act = ASTLinter(val).is_none()
     assert param["expected"] == act
+
+
+@pytest.mark.parametrize(
+    "module",
+    ["databricks", "google", "pandas", "pytest", "requests", "sqlglot", "urllib3", "yaml"])
+def test_safely_parses_whitelisted_modules(module):
+    site_packages_path = locate_site_packages()
+    module_path = Path(site_packages_path, module)
+    for root, dir_names, file_names in os.walk(module_path):
+        for file_name in file_names:
+            if file_name.endswith('.py'):
+                path = Path(root, file_name)
+                code = path.read_text("utf-8")
+                linter = ASTLinter.parse(code)
+                assert linter is not None
+                PythonLinter.list_sys_path_changes(linter)
+                PythonLinter.list_import_sources(linter)
+                PythonLinter.list_dbutils_notebook_run_calls(linter)
+
+
+def test_safely_parses_our_own_dogfood():
+    root_path = Path(__file__).parent.parent.parent.parent.resolve()
+    src_path = Path(root_path, "src")
+    for root, dir_names, file_names in os.walk(src_path):
+        for file_name in file_names:
+            if file_name.endswith('.py'):
+                path = Path(root, file_name)
+                code = path.read_text("utf-8")
+                linter = ASTLinter.parse(code)
+                assert linter is not None
+                PythonLinter.list_sys_path_changes(linter)
+                PythonLinter.list_import_sources(linter)
+                PythonLinter.list_dbutils_notebook_run_calls(linter)
