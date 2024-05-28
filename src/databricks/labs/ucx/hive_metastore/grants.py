@@ -394,8 +394,8 @@ class AwsACL:
                 "No external location found, If hive metastore tables are created in external storage, "
                 "ensure migrate-locations cli cmd is run to create the required locations."
             )
-            logger.error(msg)
-            raise ResourceDoesNotExist(msg) from None
+            logger.debug(msg)
+            return {}
 
         permission_mappings = self._installation.load(
             list[AWSRoleAction],

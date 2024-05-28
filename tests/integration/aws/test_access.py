@@ -11,6 +11,7 @@ from databricks.labs.ucx.assessment.aws import AWSInstanceProfile, AWSResources
 from databricks.labs.ucx.aws.access import AWSResourcePermissions
 from databricks.labs.ucx.aws.locations import AWSExternalLocationsMigration
 from databricks.labs.ucx.config import WorkspaceConfig
+from databricks.labs.ucx.contexts.workspace_cli import WorkspaceContext
 from databricks.labs.ucx.hive_metastore import ExternalLocations
 from databricks.labs.ucx.hive_metastore.locations import ExternalLocation
 
@@ -68,7 +69,7 @@ def test_create_external_location(ws, env_or_skip, make_random, inventory_schema
 
 
 def test_create_uber_instance_profile(
-    ws, env_or_skip, make_random, inventory_schema, sql_backend, make_cluster_policy, aws_cli_ctx
+        ws, env_or_skip, make_random, inventory_schema, sql_backend, make_cluster_policy, aws_cli_ctx
 ):
     profile = env_or_skip("AWS_DEFAULT_PROFILE")
     aws = AWSResources(profile)
@@ -112,12 +113,12 @@ def test_create_uber_instance_profile(
 
 
 def test_create_external_location_validate_acl(
-    make_cluster_permissions,
-    ws,
-    make_user,
-    make_cluster,
-    aws_cli_ctx,
-    env_or_skip,
+        make_cluster_permissions,
+        ws,
+        make_user,
+        make_cluster,
+        aws_cli_ctx,
+        env_or_skip,
 ):
     aws_cli_ctx.with_dummy_resource_permission()
     aws_cli_ctx.save_locations()
@@ -154,3 +155,23 @@ def test_create_external_location_validate_acl(
             env_or_skip("TEST_A_LOCATION"),
             changes=[PermissionsChange(remove=remove_aws_permissions, principal=cluster_user.user_name)],
         )
+
+
+def test_create_location(ws, env_or_skip, sql_backend):
+    installation_ctx = WorkspaceContext(ws)
+    external_location_migration = installation_ctx.external_locations_migration
+    external_locations = external_location_migration.run()
+    external_locations = [
+        external_location
+        for external_location in list(ws.external_locations.list())
+        if external_location.name == f"ucx_location_1"
+    ]
+    assert len(external_locations) >= 1
+
+
+def test_create_uber(ws, env_or_skip, sql_backend):
+    installation_ctx = WorkspaceContext(ws)
+    catalog_schema = installation_ctx.catalog_schema
+    catalog_schema.create_all_catalogs_schemas(MockPrompts({
+        "Please provide storage location url for catalog:client_info.*": "s3://sandboxagd3ez-data-eng/readmission/client-info",
+        "Please provide storage location url for catalog:lookup.*": "s3://sandboxagd3ez-data-eng/readmission/lookup",}))

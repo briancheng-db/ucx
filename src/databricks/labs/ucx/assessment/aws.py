@@ -82,7 +82,7 @@ class AWSCredentialCandidate:
 
 @lru_cache(maxsize=1024)
 def run_command(command):
-    logger.info(f"Invoking Command {command}")
+    logger.debug(f"Invoking Command {command}")
     with subprocess.Popen(command.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE) as process:
         output, error = process.communicate()
         return process.returncode, output.decode("utf-8"), error.decode("utf-8")

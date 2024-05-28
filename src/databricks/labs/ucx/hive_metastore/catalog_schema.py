@@ -22,7 +22,7 @@ class CatalogSchema:
     ):
         self._ws = ws
         self._table_mapping = table_mapping
-        self._external_locations = self._ws.external_locations.list()
+        self._existing_paths = [external_location.url for external_location in self._ws.external_locations.list()]
         self._principal_grants = principal_grants
         self._backend = sql_backend
 
@@ -142,10 +142,10 @@ class CatalogSchema:
         except ValueError:
             logger.error(f"Invalid location path {location}")
             return False
-        for external_location in self._external_locations:
-            if location == external_location.url:
+        for path in self._existing_paths:
+            if location == path:
                 return True
-            if external_location.url is not None and fnmatch.fnmatch(location, external_location.url + '*'):
+            if path is not None and fnmatch.fnmatch(location, path + '*'):
                 return True
         return False
 

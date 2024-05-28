@@ -39,25 +39,26 @@ class AWSExternalLocationsMigration:
         existing_paths = [external_location.url for external_location in existing_external_locations]
         compatible_roles = self._aws_resource_permissions.load_uc_compatible_roles()
         missing_paths = self._identify_missing_external_locations(external_locations, existing_paths, compatible_roles)
+        external_location_names = [external_location.name for external_location in existing_external_locations]
         for path, role_arn in missing_paths:
             if role_arn not in credential_dict:
                 logger.error(f"Missing credential for role {role_arn} for path {path}")
                 continue
+            new_name = self._generate_external_location_name(location_prefix, external_location_names)
             self._ws.external_locations.create(
-                self._generate_external_location_name(location_prefix),
+                new_name,
                 path,
                 credential_dict[role_arn],
                 skip_validation=True,
             )
+            external_location_names.append(new_name)
         self._principal_acl.apply_location_acl()
 
-    def _generate_external_location_name(self, location_prefix: str):
+    def _generate_external_location_name(self, location_prefix: str, existing_names: list[str]):
         external_location_num = 1
-        existing_external_locations = self._ws.external_locations.list()
-        external_location_names = [external_location.name for external_location in existing_external_locations]
         while True:
             external_location_name = f"{location_prefix}_{external_location_num}"
-            if external_location_name not in external_location_names:
+            if external_location_name not in existing_names:
                 break
             external_location_num += 1
         return external_location_name
