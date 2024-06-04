@@ -27,9 +27,10 @@ class SharedClusterMatcher:
         for node in ast.walk(tree):
             for advice in self.lint(node):
                 loc = (advice.start_line, advice.start_col)
-                if loc not in reported_locations:
-                    reported_locations.add(loc)
-                    yield advice
+                if loc in reported_locations:
+                    continue
+                reported_locations.add(loc)
+                yield advice
 
 
 class JvmAccessMatcher(SharedClusterMatcher):

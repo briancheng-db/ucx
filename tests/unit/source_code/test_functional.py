@@ -7,6 +7,7 @@ from pathlib import Path
 import pytest
 
 from databricks.labs.ucx.hive_metastore.migration_status import MigrationIndex, MigrationStatus
+from databricks.labs.ucx.source_code.base import Advice
 from databricks.labs.ucx.source_code.linters.context import LinterContext
 from databricks.labs.ucx.source_code.notebooks.sources import FileLinter
 
@@ -45,9 +46,13 @@ class Functional:
     def __init__(self, path: Path):
         self.path = path
 
+    @staticmethod
+    def _problem_sort_key(problem: Expectation | Advice):
+        return problem.start_line, problem.start_col, problem.code, problem.message
+
     def verify(self):
-        expected_problems = list(self._expected_problems())
-        actual_problems = sorted(list(self._lint()), key=lambda a: (a.start_line, a.start_col))
+        expected_problems = sorted(list(self._expected_problems()), key=Functional._problem_sort_key)
+        actual_problems = sorted(list(self._lint()), key=Functional._problem_sort_key)
         high_level_expected = [f'{p.code}:{p.message}' for p in expected_problems]
         high_level_actual = [f'{p.code}:{p.message}' for p in actual_problems]
         assert high_level_expected == high_level_actual
