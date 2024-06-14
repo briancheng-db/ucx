@@ -1,4 +1,5 @@
 import logging
+import os
 import sys
 from pathlib import Path
 
@@ -53,8 +54,11 @@ def lint_all(file_to_lint: str | None):
     parseable = 0
     missing_imports = 0
     all_files = list(dist.glob('**/*.py')) if file_to_lint is None else [Path(dist, file_to_lint)]
-    malformed = Path(Path(__file__).parent, "solacc-malformed.txt")
+    unparsed = Path(Path(__file__).parent, "solacc-unparsed.txt")
+    if unparsed.exists():
+        os.remove(unparsed)
     skipped: set[str] | None = None
+    malformed = Path(Path(__file__).parent, "solacc-malformed.txt")
     if file_to_lint is None and malformed.exists():
         text = malformed.read_text()
         skipped = set(text.split("\n"))
@@ -75,8 +79,8 @@ def lint_all(file_to_lint: str | None):
             else:
                 logger.error(f"Error during parsing of {file}: {e}".replace("\n", " "))
             if skipped is None and file_to_lint is None:
-                # create solacc-malformed.txt
-                with malformed.open(mode="a") as f:
+                # create solacc-unparsed.txt
+                with unparsed.open(mode="a") as f:
                     f.write(file.relative_to(dist).as_posix())
                     f.write("\n")
     parseable_pct = int(parseable / len(all_files) * 100)
