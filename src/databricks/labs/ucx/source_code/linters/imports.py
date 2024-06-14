@@ -116,6 +116,8 @@ class DbutilsLinter(Linter):
         self._session_state = session_state
 
     def lint(self, code: str) -> Iterable[Advice]:
+        from databricks.labs.ucx.source_code.notebooks.magic import MagicCommand
+        code = MagicCommand.convert_magic_lines_to_magic_commands(code)
         tree = Tree.parse(code)
         nodes = self.list_dbutils_notebook_run_calls(tree)
         for node in nodes:
@@ -255,3 +257,5 @@ class SysPathChangesVisitor(TreeVisitor):
             alias = self._aliases.get(full_name, full_name)
             return node.name == alias
         return False
+
+
