@@ -78,8 +78,8 @@ def lint_all(file_to_lint: str | None):
                 logger.error(f"Error during parsing of {file}: {e}".replace("\n", " "), exc_info=e)
             else:
                 logger.error(f"Error during parsing of {file}: {e}".replace("\n", " "))
-            if skipped is None and file_to_lint is None:
-                # create solacc-unparsed.txt
+            if file_to_lint is None:
+                # populate solacc-unparsed.txt
                 with unparsed.open(mode="a") as f:
                     f.write(file.relative_to(dist).as_posix())
                     f.write("\n")
