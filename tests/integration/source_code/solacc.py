@@ -54,9 +54,10 @@ def lint_all(file_to_lint: str | None):
     parseable = 0
     missing_imports = 0
     all_files = list(dist.glob('**/*.py')) if file_to_lint is None else [Path(dist, file_to_lint)]
-    unparsed = Path(Path(__file__).parent, "solacc-unparsed.txt")
-    if unparsed.exists():
-        os.remove(unparsed)
+    if file_to_lint is None:
+        unparsed = Path(Path(__file__).parent, "solacc-unparsed.txt")
+        if unparsed.exists():
+            os.remove(unparsed)
     skipped: set[str] | None = None
     malformed = Path(Path(__file__).parent, "solacc-malformed.txt")
     if file_to_lint is None and malformed.exists():
