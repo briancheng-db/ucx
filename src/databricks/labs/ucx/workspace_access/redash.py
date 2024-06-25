@@ -30,13 +30,14 @@ class SqlPermissionsInfo:
 
 
 class Listing:
-    def __init__(self, func: Callable[..., Iterable], request_type: sql.ObjectTypePlural):
+    def __init__(self, func: Callable[..., Iterable], request_type: sql.ObjectTypePlural, params: dict = None):
         self._func = func
         self._request_type = request_type
         self.object_type = request_type.value
+        self._params = params or {}
 
     def __iter__(self):
-        for item in self._func():
+        for item in self._func(**self._params):
             yield SqlPermissionsInfo(item.id, self._request_type)
 
     def __repr__(self):

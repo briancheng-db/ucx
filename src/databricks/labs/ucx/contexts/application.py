@@ -171,7 +171,7 @@ class GlobalContext(abc.ABC):
         acl_listing = [
             redash.Listing(self.workspace_client.alerts.list, sql.ObjectTypePlural.ALERTS),
             redash.Listing(self.workspace_client.dashboards.list, sql.ObjectTypePlural.DASHBOARDS),
-            redash.Listing(self.workspace_client.queries.list, sql.ObjectTypePlural.QUERIES),
+            redash.Listing(self.workspace_client.queries.list, sql.ObjectTypePlural.QUERIES, {"page_size": 500}),
         ]
         return redash.RedashPermissionsSupport(
             self.workspace_client,
